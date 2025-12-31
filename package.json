@@ -1,0 +1,7 @@
+{
+  "name": "lantern-root",
+  "version": "1.0.0",
+  "scripts": {
+    "fin": "bun scripts/fin.js"
+  }
+}
