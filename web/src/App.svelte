@@ -3,13 +3,44 @@
   import './lib/android'; // Import types
   import ControlPanel from './ControlPanel.svelte';
   import FileBrowser from './FileBrowser.svelte';
+  import WaitingRoom from './WaitingRoom.svelte';
+  import RejectedScreen from './RejectedScreen.svelte';
+  import { checkAuthStatus, requestAuth } from './lib/authService';
 
   let isAndroidApp = false;
+  let authStatus: "CHECKING" | "PENDING" | "APPROVED" | "REJECTED" | "SHARED" = "CHECKING";
+  let shareToken = "";
 
-  onMount(() => {
+  onMount(async () => {
     // Check if running inside Android WebView with our interface
     if (window.Android) {
         isAndroidApp = true;
+        return;
+    }
+    
+    // Check for Magic Link
+    const path = window.location.pathname;
+    if (path.startsWith("/s/")) {
+        shareToken = path.split("/s/")[1];
+        if (shareToken) {
+            authStatus = "SHARED";
+            return;
+        }
+    }
+
+    // Auth Flow for Web Clients
+    const status = await checkAuthStatus();
+    if (status === "NONE") {
+        // New session needed
+        try {
+            const deviceName = "Web Client " + Math.floor(Math.random() * 1000); // Simple ID for now
+            const newStatus = await requestAuth(deviceName);
+            authStatus = newStatus as any;
+        } catch (e) {
+            console.error("Auth init failed", e);
+        }
+    } else {
+        authStatus = status as any;
     }
   });
 </script>
@@ -17,5 +48,16 @@
 {#if isAndroidApp}
   <ControlPanel />
 {:else}
-  <FileBrowser />
+  {#if authStatus === "APPROVED"}
+    <FileBrowser />
+  {:else if authStatus === "SHARED"}
+    <FileBrowser shareToken={shareToken} />
+  {:else if authStatus === "PENDING"}
+    <WaitingRoom onApproved={() => authStatus = "APPROVED"} />
+  {:else if authStatus === "REJECTED"}
+    <RejectedScreen />
+  {:else}
+    <!-- Loading state -->
+    <div style="background: #020617; height: 100vh;"></div>
+  {/if}
 {/if}

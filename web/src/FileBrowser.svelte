@@ -17,6 +17,7 @@
     import type { FileItem } from "./lib/types";
     import {
         fetchFiles,
+        fetchSharedFiles,
         deleteFileItem,
         renameFileItem,
         uploadFile,
@@ -24,6 +25,8 @@
     } from "./lib/fileService";
     import Navigator from "./components/Navigator.svelte";
     import FileCard from "./components/FileCard.svelte";
+
+    export let shareToken: string = "";
 
     let currentPath = "";
     let files: FileItem[] = [];
@@ -61,7 +64,12 @@
         loading = true;
         error = "";
         try {
-            const data = await fetchFiles(path);
+            let data;
+            if (shareToken) {
+                data = await fetchSharedFiles(shareToken, path);
+            } else {
+                data = await fetchFiles(path);
+            }
             files = data.files;
             currentPath = data.path;
         } catch (e) {
@@ -82,11 +90,12 @@
             const dlPath = currentPath
                 ? `${currentPath}/${item.name}`
                 : item.name;
-            window.open(getDownloadUrl(dlPath), "_blank");
+            window.open(getDownloadUrl(dlPath, shareToken), "_blank");
         }
     }
 
     async function handleDelete(item: FileItem) {
+        if (shareToken) return; // Read-only
         if (!confirm(`Delete ${item.name}?`)) return;
         const itemPath = currentPath
             ? `${currentPath}/${item.name}`
@@ -100,6 +109,7 @@
     }
 
     async function handleRename(item: FileItem) {
+        if (shareToken) return; // Read-only
         const newName = prompt("Rename to:", item.name);
         if (!newName || newName === item.name) return;
         const itemPath = currentPath
@@ -114,6 +124,7 @@
     }
 
     async function onFileUpload(e: Event) {
+        if (shareToken) return; // Read-only
         const target = e.target as HTMLInputElement;
         if (!target.files?.length) return;
 
@@ -159,7 +170,7 @@
         <header>
             <div class="brand">
                 <div class="logo-mark"></div>
-                <h1>Lantern</h1>
+                <h1>Lantern {shareToken ? '(Shared)' : ''}</h1>
             </div>
             
             <div class="controls-desktop">
@@ -260,8 +271,8 @@
                                 item={file}
                                 viewMode={viewMode}
                                 onNavigate={handleNavigate}
-                                onDelete={handleDelete}
-                                onRename={handleRename}
+                                onDelete={shareToken ? undefined : handleDelete}
+                                onRename={shareToken ? undefined : handleRename}
                             />
                         </div>
                     {/each}
@@ -270,16 +281,18 @@
         </div>
     </div>
 
-    <button class="fab" on:click={() => fileInput.click()}>
-        <UploadCloud size={24} />
-        <span class="fab-text">Upload</span>
-    </button>
-    <input
-        type="file"
-        bind:this={fileInput}
-        on:change={onFileUpload}
-        style="display: none;"
-    />
+    {#if !shareToken}
+        <button class="fab" on:click={() => fileInput.click()}>
+            <UploadCloud size={24} />
+            <span class="fab-text">Upload</span>
+        </button>
+        <input
+            type="file"
+            bind:this={fileInput}
+            on:change={onFileUpload}
+            style="display: none;"
+        />
+    {/if}
 </div>
 
 <style>
@@ -581,7 +594,7 @@
         }
 
         .file-grid.grid {
-            grid-template-columns: repeat(2, 1fr);
+            grid-template-columns: repeat(2, minmax(0, 1fr));
         }
 
         .fab-text { display: none; }

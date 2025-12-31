@@ -1,11 +1,15 @@
 package com.lantern.app
 
 import android.annotation.SuppressLint
+import android.content.ComponentName
+import android.content.Context
 import android.content.Intent
+import android.content.ServiceConnection
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Environment
+import android.os.IBinder
 import android.provider.Settings
 import android.webkit.WebSettings
 import android.webkit.WebView
@@ -13,13 +17,30 @@ import android.webkit.WebViewClient
 import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
-import com.lantern.app.ui.theme.LanternTheme
 import java.io.File
 
 class MainActivity : ComponentActivity() {
 
     private val viewModel: MainViewModel by viewModels()
     private lateinit var webView: WebView
+    
+    private var lanternService: LanternService? = null
+    private var isBound = false
+
+    private val serviceConnection = object : ServiceConnection {
+        override fun onServiceConnected(className: ComponentName, service: IBinder) {
+            val binder = service as LanternService.LocalBinder
+            lanternService = binder.getService()
+            isBound = true
+            viewModel.bindService(lanternService!!)
+        }
+
+        override fun onServiceDisconnected(arg0: ComponentName) {
+            isBound = false
+            lanternService = null
+            viewModel.unbindService()
+        }
+    }
 
     private val storagePermissionLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
@@ -27,9 +48,38 @@ class MainActivity : ComponentActivity() {
         // Permission check happens via polling in JS or explicitly
     }
 
+    private val filePickerLauncher = registerForActivityResult(
+        ActivityResultContracts.OpenDocument()
+    ) { uri: Uri? ->
+        uri?.let { handlePickedUri(it) }
+    }
+
+    private val folderPickerLauncher = registerForActivityResult(
+        ActivityResultContracts.OpenDocumentTree()
+    ) { uri: Uri? ->
+        uri?.let { handlePickedUri(it) }
+    }
+
+    private fun handlePickedUri(uri: Uri) {
+        viewModel.createShareFromUri(uri, contentResolver)
+    }
+
+    fun openFilePicker() {
+        filePickerLauncher.launch(arrayOf("*/*"))
+    }
+
+    fun openFolderPicker() {
+        folderPickerLauncher.launch(null)
+    }
+
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        // Start and Bind Service
+        val intent = Intent(this, LanternService::class.java)
+        startService(intent)
+        bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
         
         webView = WebView(this)
         webView.setLayerType(android.view.View.LAYER_TYPE_HARDWARE, null)
@@ -40,7 +90,6 @@ class MainActivity : ComponentActivity() {
             domStorageEnabled = true
             allowFileAccess = true
             allowContentAccess = true
-            // Allow loading local assets
             allowFileAccessFromFileURLs = true
             allowUniversalAccessFromFileURLs = true
             cacheMode = WebSettings.LOAD_DEFAULT
@@ -54,8 +103,15 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-        // Load the local Svelte app
         webView.loadUrl("file:///android_asset/files/index.html")
+    }
+    
+    override fun onDestroy() {
+        super.onDestroy()
+        if (isBound) {
+            unbindService(serviceConnection)
+            isBound = false
+        }
     }
 
     fun checkStoragePermission(): Boolean {
