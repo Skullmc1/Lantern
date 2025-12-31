@@ -1,268 +1,282 @@
 <script lang="ts">
     import { onMount, onDestroy } from "svelte";
-    import {
-        Cast,
-        AlertTriangle,
-        PlayCircle,
-        StopCircle,
-        Copy,
-    } from "lucide-svelte";
-    // ... Logic remains the same ...
-    let isServerRunning = false;
-    let ipAddress = "...";
-    let port = 8080;
-    let hasPermission = false;
+    import { Wifi, Power, Lock, Zap } from "lucide-svelte";
+
+    // --- Logic Module ---
+    let state = {
+        running: false,
+        ip: "...",
+        port: 8080,
+        permission: false,
+    };
     let interval: number;
 
-    function updateStatus() {
-        if (typeof window !== "undefined" && window.Android) {
+    function syncState() {
+        if (window.Android) {
             try {
                 const status = JSON.parse(window.Android.getServerStatus());
-                isServerRunning = status.isRunning;
-                ipAddress = status.ip;
-                port = status.port;
-                hasPermission = window.Android.checkPermission();
-            } catch (e) {}
+                state = {
+                    running: status.isRunning,
+                    ip: status.ip,
+                    port: status.port,
+                    permission: window.Android.checkPermission(),
+                };
+            } catch (e) {
+                console.error(e);
+            }
         }
     }
-    function toggleServer() {
-        if (window.Android) {
-            !hasPermission
-                ? window.Android.requestPermission()
-                : window.Android.toggleServer();
-            setTimeout(updateStatus, 500);
-        }
+
+    function handleToggle() {
+        if (!window.Android) return;
+        if (!state.permission) window.Android.requestPermission();
+        else window.Android.toggleServer();
+        setTimeout(syncState, 300);
     }
+
     onMount(() => {
-        updateStatus();
-        interval = setInterval(updateStatus, 2000);
+        syncState();
+        interval = setInterval(syncState, 2000);
     });
     onDestroy(() => clearInterval(interval));
 </script>
 
-<div class="glass-container">
-    <div class="top-bar">
-        <div class="brand">
-            <Cast size={20} color="#10b981" />
-            <span>LANTERN OS</span>
-        </div>
-        <div class="led {isServerRunning ? 'on' : ''}"></div>
-    </div>
+<div class="viewport">
+    <div class="bg-layer"></div>
+    <div class="rain-overlay"></div>
 
-    <div class="content">
-        <div class="card status-card">
-            <span class="label">Status</span>
-            <h2 class={isServerRunning ? "active" : "inactive"}>
-                {isServerRunning ? "BROADCASTING" : "STANDBY"}
-            </h2>
-        </div>
+    <div class="glass-panel">
+        <header class="animated-header">
+            <div class="signal-bars">
+                <div class="bar" style="animation-delay: 0.1s"></div>
+                <div class="bar" style="animation-delay: 0.2s"></div>
+                <div class="bar" style="animation-delay: 0.3s"></div>
+            </div>
+            <span class="app-name">LANTERN</span>
+        </header>
 
-        {#if isServerRunning}
-            <div class="card url-card">
-                <span class="label">Access Point</span>
-                <div class="url-row">
-                    <span class="protocol">http://</span>
-                    <span class="ip">{ipAddress}</span>
-                    <span class="port">:{port}</span>
+        <div class="content">
+            <div class="status-display">
+                <h2 class:active={state.running}>
+                    {state.running ? "ONLINE" : "OFFLINE"}
+                </h2>
+                <div class="meta-row">
+                    {#if state.running}
+                        <span class="tag ip">{state.ip}:{state.port}</span>
+                    {/if}
+                    {#if !state.permission}
+                        <span class="tag warn"
+                            ><Lock size={10} /> Perms Needed</span
+                        >
+                    {/if}
                 </div>
-                <button class="copy-btn"><Copy size={16} /></button>
             </div>
-        {/if}
 
-        {#if !hasPermission}
-            <div class="card warning-card">
-                <AlertTriangle size={20} />
-                <span>Storage Access Required</span>
-            </div>
-        {/if}
-    </div>
-
-    <div class="controls">
-        <button
-            class="slider-btn {isServerRunning ? 'stop' : 'start'}"
-            on:click={toggleServer}
-        >
-            <span class="btn-text">
-                {#if !hasPermission}
-                    Authorize Access
-                {:else}
-                    {isServerRunning
-                        ? "TERMINATE SESSION"
-                        : "INITIALIZE SERVER"}
-                {/if}
-            </span>
-            {#if isServerRunning}
-                <StopCircle size={24} />
-            {:else}
-                <PlayCircle size={24} />
-            {/if}
-        </button>
+            <button
+                class="glass-toggle"
+                class:active={state.running}
+                on:click={handleToggle}
+            >
+                <div class="icon-box">
+                    <Power size={32} />
+                </div>
+                <span class="toggle-label"
+                    >{state.running ? "Deactivate" : "Activate"}</span
+                >
+            </button>
+        </div>
     </div>
 </div>
 
 <style>
-    .glass-container {
-        height: 100vh;
-        background: #0f172a;
-        background-image:
-            linear-gradient(rgba(16, 185, 129, 0.05) 1px, transparent 1px),
-            linear-gradient(
-                90deg,
-                rgba(16, 185, 129, 0.05) 1px,
-                transparent 1px
-            );
-        background-size: 30px 30px;
-        display: flex;
-        flex-direction: column;
-        padding: 1.5rem;
-        box-sizing: border-box;
-        font-family: "JetBrains Mono", "Courier New", monospace;
-        color: #e2e8f0;
-    }
-
-    .top-bar {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 2rem;
-    }
-
-    .brand {
-        display: flex;
-        gap: 10px;
-        font-weight: 700;
-        color: #10b981;
-        letter-spacing: 2px;
-    }
-
-    .led {
-        width: 8px;
-        height: 8px;
-        background: #334155;
-        border-radius: 50%;
-        box-shadow: 0 0 0 2px #1e293b;
-    }
-    .led.on {
-        background: #10b981;
-        box-shadow: 0 0 10px #10b981;
-    }
-
-    .content {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        gap: 1rem;
-        justify-content: center;
-    }
-
-    .card {
-        background: rgba(30, 41, 59, 0.7);
-        backdrop-filter: blur(10px);
-        border: 1px solid #334155;
-        padding: 1.5rem;
-        border-radius: 8px;
-        position: relative;
+    :global(body) {
+        margin: 0;
+        background: #000;
+        font-family: "Inter", sans-serif;
         overflow: hidden;
     }
 
-    .card::before {
-        content: "";
+    .viewport {
+        height: 100vh;
+        width: 100vw;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+    }
+
+    /* --- Optimized Background --- */
+    .bg-layer {
         position: absolute;
-        top: 0;
-        left: 0;
-        width: 4px;
-        height: 100%;
-        background: #334155;
+        inset: -20px; /* Bleed for movement */
+        background: url("https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?q=80&w=1000&auto=format&fit=crop")
+            center/cover;
+        filter: brightness(0.4);
+        animation: slowPan 60s ease-in-out infinite alternate;
+        will-change: transform;
+        z-index: 0;
     }
 
-    .status-card::before {
+    .rain-overlay {
+        position: absolute;
+        inset: 0;
+        background-image: url("https://upload.wikimedia.org/wikipedia/commons/6/66/Load.gif"); /* Using a noise texture works too */
+        opacity: 0.05;
+        mix-blend-mode: overlay;
+        pointer-events: none;
+        z-index: 1;
+    }
+
+    /* --- Glass Panel --- */
+    .glass-panel {
+        width: 90%;
+        max-width: 360px;
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 24px;
+        padding: 2rem;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        z-index: 10;
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+    }
+
+    /* --- Header --- */
+    .animated-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        padding-bottom: 1rem;
+    }
+
+    .app-name {
+        color: #fff;
+        letter-spacing: 4px;
+        font-weight: 200;
+        font-size: 0.9rem;
+    }
+
+    .signal-bars {
+        display: flex;
+        gap: 3px;
+        align-items: flex-end;
+        height: 16px;
+    }
+    .bar {
+        width: 3px;
         background: #10b981;
+        animation: equalize 1s infinite;
+        height: 50%;
     }
 
-    .label {
-        font-size: 0.75rem;
-        color: #94a3b8;
-        text-transform: uppercase;
-        display: block;
-        margin-bottom: 0.5rem;
+    /* --- Content --- */
+    .status-display {
+        text-align: center;
+        margin: 1rem 0;
     }
 
     h2 {
+        font-size: 2.5rem;
         margin: 0;
-        font-size: 1.8rem;
+        color: #52525b;
+        transition: color 0.3s;
         letter-spacing: -1px;
     }
     h2.active {
-        color: #10b981;
-        text-shadow: 0 0 15px rgba(16, 185, 129, 0.3);
-    }
-    h2.inactive {
-        color: #64748b;
+        color: #fff;
+        text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
     }
 
-    .url-card {
+    .meta-row {
         display: flex;
-        align-items: center;
-        justify-content: space-between;
-    }
-    .url-row {
-        font-size: 1.25rem;
-    }
-    .protocol {
-        color: #64748b;
-    }
-    .port {
-        color: #10b981;
+        justify-content: center;
+        gap: 10px;
+        margin-top: 10px;
+        min-height: 24px;
     }
 
-    .copy-btn {
-        background: none;
-        border: none;
-        color: #94a3b8;
-        cursor: pointer;
-    }
-
-    .warning-card {
-        border-color: #7f1d1d;
-        background: rgba(127, 29, 29, 0.1);
-        color: #fca5a5;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-    }
-    .warning-card::before {
-        background: #ef4444;
-    }
-
-    .controls {
-        margin-top: auto;
-    }
-
-    .slider-btn {
-        width: 100%;
-        padding: 1.25rem;
-        border: none;
+    .tag {
+        background: rgba(0, 0, 0, 0.3);
+        padding: 4px 8px;
         border-radius: 4px;
-        font-family: inherit;
-        font-weight: bold;
+        color: #a1a1aa;
+        font-size: 0.8rem;
+        font-family: monospace;
+    }
+    .tag.ip {
+        color: #34d399;
+        border: 1px solid rgba(52, 211, 153, 0.2);
+    }
+    .tag.warn {
+        color: #f87171;
         display: flex;
-        justify-content: space-between;
         align-items: center;
-        cursor: pointer;
-        transition: all 0.2s;
-        text-transform: uppercase;
+        gap: 4px;
     }
 
-    .slider-btn.start {
+    /* --- Toggle Button --- */
+    .glass-toggle {
+        background: linear-gradient(
+            145deg,
+            rgba(255, 255, 255, 0.05),
+            rgba(255, 255, 255, 0.01)
+        );
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 16px;
+        padding: 1.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        color: #fff;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .glass-toggle:active {
+        transform: scale(0.98);
+    }
+
+    .glass-toggle.active {
+        background: rgba(16, 185, 129, 0.2);
+        border-color: rgba(52, 211, 153, 0.4);
+        box-shadow: 0 0 30px rgba(16, 185, 129, 0.1);
+    }
+
+    .icon-box {
+        background: rgba(255, 255, 255, 0.1);
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.3s;
+    }
+
+    .glass-toggle.active .icon-box {
         background: #10b981;
         color: #022c22;
     }
-    .slider-btn.stop {
-        background: #ef4444;
-        color: white;
-    }
 
-    .slider-btn:active {
-        transform: translateY(2px);
+    @keyframes slowPan {
+        from {
+            transform: scale(1.1) translate(0, 0);
+        }
+        to {
+            transform: scale(1.1) translate(-20px, -10px);
+        }
+    }
+    @keyframes equalize {
+        0%,
+        100% {
+            height: 30%;
+        }
+        50% {
+            height: 100%;
+        }
     }
 </style>
