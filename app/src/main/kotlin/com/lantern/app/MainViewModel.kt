@@ -4,7 +4,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.lantern.app.server.FileServer
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.net.Inet4Address
 import java.net.NetworkInterface
@@ -14,7 +18,7 @@ class MainViewModel : ViewModel() {
     var isServerRunning by mutableStateOf(false)
         private set
 
-    var ipAddress by mutableStateOf(getDeviceIpAddress())
+    var ipAddress by mutableStateOf("Loading...")
         private set
         
     var port by mutableStateOf(8080)
@@ -22,15 +26,21 @@ class MainViewModel : ViewModel() {
 
     private val fileServer = FileServer()
 
+    init {
+        refreshIp()
+    }
+
     fun toggleServer(rootDir: File) {
-        if (isServerRunning) {
-            stopServer()
-        } else {
-            startServer(rootDir)
+        viewModelScope.launch(Dispatchers.IO) {
+            if (isServerRunning) {
+                stopServer()
+            } else {
+                startServer(rootDir)
+            }
         }
     }
 
-    private fun startServer(rootDir: File) {
+    private suspend fun startServer(rootDir: File) {
         try {
             if (!rootDir.exists()) rootDir.mkdirs()
             val welcomeFile = File(rootDir, "Welcome.txt")
@@ -39,21 +49,31 @@ class MainViewModel : ViewModel() {
             }
             
             fileServer.start(port, rootDir)
-            isServerRunning = true
-            ipAddress = getDeviceIpAddress()
+            val ip = getDeviceIpAddress()
+            withContext(Dispatchers.Main) {
+                isServerRunning = true
+                ipAddress = ip
+            }
         } catch (e: Exception) {
             e.printStackTrace()
             // In a real app, update an error state here
         }
     }
 
-    private fun stopServer() {
+    private suspend fun stopServer() {
         fileServer.stop()
-        isServerRunning = false
+        withContext(Dispatchers.Main) {
+            isServerRunning = false
+        }
     }
     
     fun refreshIp() {
-        ipAddress = getDeviceIpAddress()
+        viewModelScope.launch(Dispatchers.IO) {
+            val ip = getDeviceIpAddress()
+            withContext(Dispatchers.Main) {
+                ipAddress = ip
+            }
+        }
     }
 
     private fun getDeviceIpAddress(): String {
@@ -75,6 +95,6 @@ class MainViewModel : ViewModel() {
     
     override fun onCleared() {
         super.onCleared()
-        stopServer()
+        fileServer.stop()
     }
 }

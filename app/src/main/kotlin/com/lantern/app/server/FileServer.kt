@@ -24,6 +24,8 @@ import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.routing
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import java.io.File
@@ -95,9 +97,11 @@ class FileServer {
                         return@get
                     }
                     
-                    val fileList = currentDir.listFiles()?.map { 
-                        FileItem(it.name, it.isDirectory, it.length()) 
-                    }?.sortedWith(compareBy({ !it.isDirectory }, { it.name })) ?: emptyList()
+                    val fileList = withContext(Dispatchers.IO) {
+                        currentDir.listFiles()?.map { 
+                            FileItem(it.name, it.isDirectory, it.length()) 
+                        }?.sortedWith(compareBy({ !it.isDirectory }, { it.name })) ?: emptyList()
+                    }
                     
                     call.respond(DirectoryListing(safePath, fileList))
                 }
@@ -109,6 +113,13 @@ class FileServer {
                     val file = File(rootDir, safePath)
                     
                     if (file.exists() && file.isFile) {
+                        call.response.headers.append(
+                            io.ktor.http.HttpHeaders.ContentDisposition,
+                            io.ktor.http.ContentDisposition.Attachment.withParameter(
+                                io.ktor.http.ContentDisposition.Parameters.FileName,
+                                file.name
+                            ).toString()
+                        )
                         call.respondFile(file)
                     } else {
                         call.respond(HttpStatusCode.NotFound, "File not found")
@@ -127,13 +138,19 @@ class FileServer {
                     }
 
                     val multipart = call.receiveMultipart()
-                    multipart.forEachPart { part ->
-                        if (part is PartData.FileItem) {
-                            val fileName = part.originalFileName as String
-                            val fileBytes = part.streamProvider().readBytes()
-                            File(targetDir, fileName).writeBytes(fileBytes)
+                    withContext(Dispatchers.IO) {
+                        multipart.forEachPart { part ->
+                            if (part is PartData.FileItem) {
+                                val fileName = part.originalFileName as String
+                                val file = File(targetDir, fileName)
+                                part.streamProvider().use { input ->
+                                    file.outputStream().buffered().use { output ->
+                                        input.copyTo(output)
+                                    }
+                                }
+                            }
+                            part.dispose()
                         }
-                        part.dispose()
                     }
                     call.respond(HttpStatusCode.OK, "Uploaded")
                 }

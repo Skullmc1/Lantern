@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { Terminal, ChevronRight } from "lucide-svelte";
+    import { Terminal, ChevronRight, Home } from "lucide-svelte";
 
     export let currentPath: string;
     export let onNavigate: (path: string) => void;
@@ -19,83 +19,118 @@
 </script>
 
 <div class="navigator">
-    <div class="icon-zone">
-        <Terminal size={16} />
-    </div>
-    <div class="path-scroll">
-        <button class="node root" on:click={() => onNavigate("")}>
-            ~/root
-        </button>
+    <button class="home-btn" on:click={() => onNavigate("")} title="Root">
+        <Home size={16} />
+    </button>
+    
+    <div class="divider"></div>
 
-        {#each getParts(currentPath) as part}
-            <ChevronRight size={12} class="sep" />
-            <button class="node" on:click={() => onNavigate(part.fullPath)}>
-                {part.name}
-            </button>
+    <div class="path-scroll">
+        {#each getParts(currentPath) as part, i}
+             <div class="crumb-wrapper">
+                <ChevronRight size={14} class="sep" />
+                <button class="node" on:click={() => onNavigate(part.fullPath)}>
+                    {part.name}
+                </button>
+             </div>
         {/each}
+        {#if !currentPath}
+            <span class="placeholder">/</span>
+        {/if}
     </div>
 </div>
 
 <style>
     .navigator {
-        background: rgba(6, 78, 59, 0.3);
-        border: 1px solid rgba(52, 211, 153, 0.2);
-        backdrop-filter: blur(10px);
-        border-radius: 16px;
+        background: rgba(30, 41, 59, 0.5);
+        border: 1px solid rgba(52, 211, 153, 0.1);
+        backdrop-filter: blur(12px);
+        border-radius: 12px;
         padding: 0.5rem;
         display: flex;
         align-items: center;
-        gap: 0.75rem;
         margin-bottom: 2rem;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        height: 50px;
     }
 
-    .icon-zone {
-        background: rgba(16, 185, 129, 0.1);
+    .home-btn {
+        background: none;
+        border: none;
         color: #34d399;
-        width: 32px;
-        height: 32px;
-        border-radius: 10px;
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
         display: flex;
         align-items: center;
         justify-content: center;
         flex-shrink: 0;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .home-btn:hover {
+        background: rgba(52, 211, 153, 0.1);
+        color: #6ee7b7;
+    }
+
+    .divider {
+        width: 1px;
+        height: 24px;
+        background: rgba(255, 255, 255, 0.1);
+        margin: 0 0.5rem;
     }
 
     .path-scroll {
         display: flex;
         align-items: center;
-        gap: 0.25rem;
         overflow-x: auto;
         scrollbar-width: none;
         white-space: nowrap;
         padding-right: 1rem;
+        flex: 1;
+    }
+    
+    .path-scroll::-webkit-scrollbar {
+        display: none;
+    }
+
+    .crumb-wrapper {
+        display: flex;
+        align-items: center;
+        animation: fadeSlide 0.3s ease-out;
     }
 
     .node {
         background: none;
         border: none;
-        color: #a7f3d0;
-        font-family: "Courier New", Courier, monospace;
+        color: #e2e8f0;
+        font-family: inherit;
         font-size: 0.9rem;
         cursor: pointer;
         padding: 4px 8px;
         border-radius: 6px;
         transition: all 0.2s ease;
+        font-weight: 500;
     }
 
     .node:hover {
-        background: rgba(52, 211, 153, 0.1);
-        color: #fff;
-        text-shadow: 0 0 8px rgba(52, 211, 153, 0.5);
+        background: rgba(255, 255, 255, 0.05);
+        color: #34d399;
     }
 
-    .root {
-        color: #34d399;
-        font-weight: bold;
+    .placeholder {
+        color: #64748b;
+        font-family: monospace;
+        margin-left: 0.5rem;
     }
 
     :global(.sep) {
-        color: #065f46;
+        color: #64748b;
+        margin: 0 2px;
+    }
+
+    @keyframes fadeSlide {
+        from { opacity: 0; transform: translateX(-10px); }
+        to { opacity: 1; transform: translateX(0); }
     }
 </style>

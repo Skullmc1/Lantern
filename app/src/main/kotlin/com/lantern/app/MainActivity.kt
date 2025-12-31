@@ -32,6 +32,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         
         webView = WebView(this)
+        webView.setLayerType(android.view.View.LAYER_TYPE_HARDWARE, null)
         setContentView(webView)
 
         webView.settings.apply {
@@ -42,6 +43,7 @@ class MainActivity : ComponentActivity() {
             // Allow loading local assets
             allowFileAccessFromFileURLs = true
             allowUniversalAccessFromFileURLs = true
+            cacheMode = WebSettings.LOAD_DEFAULT
         }
 
         webView.addJavascriptInterface(WebAppInterface(this, viewModel), "Android")
