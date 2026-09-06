@@ -25,6 +25,7 @@
     } from "./lib/fileService";
     import Navigator from "./components/Navigator.svelte";
     import FileCard from "./components/FileCard.svelte";
+    import GrassPlains from "./components/GrassPlains.svelte";
 
     export let shareToken: string = "";
 
@@ -160,11 +161,7 @@
 </script>
 
 <div class="lantern-shell">
-    <div class="background-fx">
-        <div class="orb orb-1"></div>
-        <div class="orb orb-2"></div>
-        <div class="grid-overlay"></div>
-    </div>
+    <GrassPlains />
 
     <div class="main-container">
         <header>
@@ -184,7 +181,7 @@
                 </div>
 
                 <div class="actions">
-                    <button class="icon-btn" on:click={toggleSort} title="Sort">
+                    <button class="icon-btn" on:click={toggleSort} title="Sort" aria-label="Toggle sort order">
                         {#if sortBy === 'name'}
                             {#if sortDesc}<ArrowDownAZ size={18} />{:else}<ArrowUpAZ size={18} />{/if}
                         {:else}
@@ -195,12 +192,18 @@
                     <button 
                         class="icon-btn {viewMode === 'grid' ? 'active' : ''}" 
                         on:click={() => viewMode = 'grid'}
+                        title="Grid view"
+                        aria-label="Grid view"
+                        aria-pressed={viewMode === 'grid'}
                     >
                         <Grid size={18} />
                     </button>
                     <button 
                         class="icon-btn {viewMode === 'list' ? 'active' : ''}" 
                         on:click={() => viewMode = 'list'}
+                        title="List view"
+                        aria-label="List view"
+                        aria-pressed={viewMode === 'list'}
                     >
                         <ListIcon size={18} />
                     </button>
@@ -208,7 +211,12 @@
             </div>
 
             <!-- Mobile Controls Toggle -->
-            <button class="mobile-menu-btn" on:click={() => mobileMenuOpen = !mobileMenuOpen}>
+            <button
+                class="mobile-menu-btn"
+                on:click={() => mobileMenuOpen = !mobileMenuOpen}
+                aria-label="Toggle controls"
+                aria-expanded={mobileMenuOpen}
+            >
                 {#if mobileMenuOpen}<X />{:else}<Menu />{/if}
             </button>
         </header>
@@ -298,7 +306,7 @@
 <style>
     :global(body) {
         margin: 0;
-        background-color: #020617;
+        background-color: var(--color-bg);
         font-family: 'Inter', system-ui, -apple-system, sans-serif;
     }
 
@@ -307,57 +315,8 @@
         position: relative;
         overflow-x: hidden;
         color: #e2e8f0;
-    }
-
-    /* --- Animated Background --- */
-    .background-fx {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100vw;
-        height: 100vh;
-        z-index: 0;
-        pointer-events: none;
-        overflow: hidden;
-    }
-
-    .grid-overlay {
-        position: absolute;
-        inset: 0;
-        background-image: 
-            linear-gradient(rgba(16, 185, 129, 0.03) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(16, 185, 129, 0.03) 1px, transparent 1px);
-        background-size: 40px 40px;
-    }
-
-    .orb {
-        position: absolute;
-        border-radius: 50%;
-        filter: blur(80px);
-        opacity: 0.4;
-        animation: float 20s infinite ease-in-out;
-    }
-
-    .orb-1 {
-        top: -10%;
-        right: -10%;
-        width: 600px;
-        height: 600px;
-        background: radial-gradient(circle, #059669 0%, transparent 70%);
-    }
-
-    .orb-2 {
-        bottom: -20%;
-        left: -10%;
-        width: 500px;
-        height: 500px;
-        background: radial-gradient(circle, #047857 0%, transparent 70%);
-        animation-delay: -5s;
-    }
-
-    @keyframes float {
-        0%, 100% { transform: translate(0, 0); }
-        50% { transform: translate(30px, 50px); }
+        padding-top: env(safe-area-inset-top, 0px);
+        padding-bottom: env(safe-area-inset-bottom, 0px);
     }
 
     /* --- Layout --- */
@@ -402,7 +361,8 @@
         font-size: 1.5rem;
         font-weight: 700;
         margin: 0;
-        background: linear-gradient(to right, #ecfdf5, #34d399);
+        background: linear-gradient(to right, #ffe9b3, #34d399);
+        background-clip: text;
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         letter-spacing: -0.5px;
@@ -419,8 +379,9 @@
         display: flex;
         align-items: center;
         gap: 0.5rem;
-        background: rgba(2, 6, 23, 0.4);
-        border: 1px solid rgba(52, 211, 153, 0.2);
+        background: var(--glass);
+        border: 1px solid var(--glass-border-green);
+        backdrop-filter: blur(12px);
         padding: 0.5rem 1rem;
         border-radius: 99px;
         transition: all 0.2s;
@@ -428,9 +389,9 @@
     }
 
     .search-bar:focus-within {
-        border-color: #34d399;
-        box-shadow: 0 0 0 2px rgba(52, 211, 153, 0.1);
-        background: rgba(2, 6, 23, 0.6);
+        border-color: var(--lantern);
+        box-shadow: 0 0 0 2px rgba(255, 184, 77, 0.15);
+        background: var(--glass-strong);
     }
 
     .search-bar input {
@@ -450,16 +411,17 @@
         display: flex;
         align-items: center;
         gap: 0.25rem;
-        background: rgba(2, 6, 23, 0.4);
+        background: var(--glass);
+        backdrop-filter: blur(12px);
         padding: 0.25rem;
         border-radius: 12px;
-        border: 1px solid rgba(52, 211, 153, 0.2);
+        border: 1px solid var(--glass-border-green);
     }
 
     .icon-btn {
         background: none;
         border: none;
-        color: #94a3b8;
+        color: #a7c0b2;
         padding: 0.5rem;
         border-radius: 8px;
         cursor: pointer;
@@ -470,13 +432,13 @@
     }
 
     .icon-btn:hover {
-        background: rgba(52, 211, 153, 0.1);
-        color: #34d399;
+        background: rgba(255, 184, 77, 0.12);
+        color: var(--lantern);
     }
 
     .icon-btn.active {
-        background: #34d399;
-        color: #020617;
+        background: var(--lantern);
+        color: #3a2406;
     }
 
     .divider {
@@ -491,16 +453,17 @@
         display: none;
         background: none;
         border: none;
-        color: #34d399;
+        color: var(--lantern);
         cursor: pointer;
     }
 
     .mobile-controls {
-        background: rgba(6, 78, 59, 0.2);
+        background: var(--glass);
+        backdrop-filter: blur(14px);
         padding: 1rem;
         border-radius: 16px;
         margin-bottom: 1.5rem;
-        border: 1px solid rgba(52, 211, 153, 0.1);
+        border: 1px solid var(--glass-border-green);
     }
 
     .mobile-actions {
@@ -558,8 +521,8 @@
         position: fixed;
         bottom: 2rem;
         right: 2rem;
-        background: #10b981;
-        color: #022c22;
+        background: linear-gradient(135deg, var(--lantern) 0%, var(--lantern-deep) 100%);
+        color: #2a1c04;
         border: none;
         border-radius: 50px;
         padding: 1rem 1.5rem;
@@ -567,7 +530,7 @@
         align-items: center;
         gap: 0.5rem;
         font-weight: 700;
-        box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.5);
+        box-shadow: 0 10px 30px -5px rgba(255, 184, 77, 0.5);
         cursor: pointer;
         z-index: 100;
         transition: transform 0.2s, box-shadow 0.2s;
@@ -575,8 +538,8 @@
 
     .fab:hover {
         transform: translateY(-4px) scale(1.05);
-        background: #34d399;
-        box-shadow: 0 15px 30px -5px rgba(16, 185, 129, 0.6);
+        background: linear-gradient(135deg, var(--lantern-soft) 0%, var(--lantern) 100%);
+        box-shadow: 0 15px 35px -5px rgba(255, 184, 77, 0.65);
     }
 
     /* --- Responsive --- */

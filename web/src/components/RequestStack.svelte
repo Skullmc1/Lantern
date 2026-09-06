@@ -53,20 +53,21 @@
     }
 
     .request-card {
-        background: rgba(15, 23, 42, 0.9);
-        border: 1px solid #34d399;
+        background: var(--glass-strong);
+        border: 1px solid var(--glass-border);
         border-radius: 12px;
         padding: 0.75rem 1rem;
         display: flex;
         align-items: center;
         gap: 1rem;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-        backdrop-filter: blur(10px);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.45);
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
     }
     
     .req-icon {
-        background: rgba(52, 211, 153, 0.1);
-        color: #34d399;
+        background: rgba(255, 184, 77, 0.14);
+        color: var(--lantern);
         padding: 8px;
         border-radius: 50%;
     }
@@ -106,8 +107,8 @@
     }
     
     .btn-approve {
-        background: #34d399;
-        color: #064e3b;
+        background: var(--lantern);
+        color: #3a2406;
     }
     
     .btn-reject {

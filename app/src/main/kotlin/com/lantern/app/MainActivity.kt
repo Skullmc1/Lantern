@@ -5,6 +5,7 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
+import android.graphics.Color
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -17,6 +18,8 @@ import android.webkit.WebViewClient
 import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import java.io.File
 
 class MainActivity : ComponentActivity() {
@@ -61,7 +64,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun handlePickedUri(uri: Uri) {
-        viewModel.createShareFromUri(uri, contentResolver)
+        viewModel.createShareFromUri(uri)
     }
 
     fun openFilePicker() {
@@ -76,6 +79,17 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
+        // Draw behind the system status bar so the app feels immersive.
+        // The meadow UI is dark at the top (dusk sky) and dark at the bottom
+        // (grass), so we use light (white) system bar icons.
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        window.statusBarColor = Color.TRANSPARENT
+        window.navigationBarColor = Color.TRANSPARENT
+        WindowInsetsControllerCompat(window, window.decorView).apply {
+            isAppearanceLightStatusBars = false
+            isAppearanceLightNavigationBars = false
+        }
+
         // Start and Bind Service
         val intent = Intent(this, LanternService::class.java)
         startService(intent)

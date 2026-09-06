@@ -31,6 +31,7 @@ class LanternService : Service() {
     val sharedItemManager = SharedItemManager()
     val fileServer = FileServer(sessionManager, sharedItemManager)
 
+    @Volatile
     var isRunning = false
         private set
 
@@ -71,11 +72,17 @@ class LanternService : Service() {
         }
     }
 
+    /**
+     * Stops the file server. May block for a few seconds while Ktor shuts down,
+     * so callers that care about UI latency should invoke this from a background
+     * thread/coroutine (see MainViewModel.toggleServer). The running flag is
+     * cleared immediately so the state is consistent while the stop is in flight.
+     */
     fun stopServer() {
         if (!isRunning) return
-        
-        fileServer.stop()
+
         isRunning = false
+        fileServer.stop()
         stopForeground(true)
     }
 

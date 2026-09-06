@@ -12,6 +12,7 @@
     export let shares: SharedItem[] = [];
     export let onRevoke: (token: string) => void;
     export let onPickFile: () => void;
+    export let onPickFolder: () => void;
     export let onShowQr: (token: string) => void;
 
     function formatTime(ts: number) {
@@ -24,6 +25,7 @@
         <h3><Share2 size={18} /> Shared Items</h3>
         <div class="add-actions">
             <button class="add-btn" on:click={onPickFile}>+ Share File</button>
+            <button class="add-btn" on:click={onPickFolder}>+ Share Folder</button>
         </div>
     </div>
 
@@ -75,7 +77,7 @@
     h3 {
         margin: 0;
         font-size: 0.9rem;
-        color: #6ee7b7;
+        color: var(--lantern-soft);
         text-transform: uppercase;
         letter-spacing: 1px;
         display: flex;
@@ -89,9 +91,9 @@
     }
 
     .add-btn {
-        background: rgba(52, 211, 153, 0.1);
-        border: 1px solid rgba(52, 211, 153, 0.2);
-        color: #34d399;
+        background: rgba(255, 184, 77, 0.1);
+        border: 1px solid rgba(255, 184, 77, 0.3);
+        color: var(--lantern);
         padding: 4px 10px;
         border-radius: 6px;
         font-size: 0.75rem;
@@ -101,17 +103,17 @@
     }
 
     .add-btn:hover {
-        background: #34d399;
-        color: #064e3b;
+        background: var(--lantern);
+        color: #3a2406;
     }
 
     .empty-state {
-        background: rgba(255, 255, 255, 0.02);
-        border: 1px dashed rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px dashed rgba(255, 233, 179, 0.2);
         border-radius: 12px;
         padding: 2rem;
         text-align: center;
-        color: #64748b;
+        color: #8aa397;
         font-size: 0.85rem;
     }
 
@@ -122,14 +124,15 @@
     }
 
     .share-card {
-        background: rgba(15, 23, 42, 0.6);
-        border: 1px solid rgba(255, 255, 255, 0.05);
+        background: var(--glass);
+        border: 1px solid var(--glass-border-green);
         border-radius: 12px;
         padding: 0.75rem;
         display: flex;
         align-items: center;
         gap: 0.75rem;
-        backdrop-filter: blur(10px);
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
     }
 
     .type-icon {
@@ -175,8 +178,8 @@
     }
 
     .action-btn:hover {
-        background: rgba(255, 255, 255, 0.05);
-        color: #34d399;
+        background: rgba(255, 184, 77, 0.12);
+        color: var(--lantern);
     }
 
     .action-btn.danger:hover {

@@ -18,6 +18,8 @@
             class="glass-orb"
             class:active={running}
             on:click={onInteract}
+            aria-label={!permission ? "Request storage permission" : (running ? "Stop broadcasting" : "Start broadcasting")}
+            aria-pressed={running}
         >
             <div class="inner-light"></div>
             <div class="icon-layer">
@@ -63,19 +65,19 @@
         width: 140px;
         height: 140px;
         border-radius: 50%;
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 233, 179, 0.18);
         background: linear-gradient(
             145deg,
-            rgba(255, 255, 255, 0.1),
-            rgba(255, 255, 255, 0.02)
+            rgba(255, 233, 179, 0.14),
+            rgba(16, 34, 27, 0.3)
         );
         backdrop-filter: blur(10px);
         -webkit-backdrop-filter: blur(10px);
         position: relative;
         cursor: pointer;
         box-shadow:
-            inset 0 0 20px rgba(255, 255, 255, 0.05),
-            0 10px 30px rgba(0, 0, 0, 0.3);
+            inset 0 0 20px rgba(255, 233, 179, 0.06),
+            0 10px 30px rgba(0, 0, 0, 0.35);
         transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         display: flex;
         align-items: center;
@@ -84,10 +86,10 @@
     }
 
     .glass-orb.active {
-        border-color: rgba(52, 211, 153, 0.5);
+        border-color: rgba(255, 209, 102, 0.6);
         box-shadow:
-            inset 0 0 30px rgba(52, 211, 153, 0.2),
-            0 0 50px rgba(16, 185, 129, 0.3);
+            inset 0 0 30px rgba(255, 184, 77, 0.25),
+            0 0 55px rgba(255, 184, 77, 0.4);
         transform: scale(0.95);
     }
 
@@ -97,7 +99,7 @@
         border-radius: 50%;
         background: radial-gradient(
             circle,
-            rgba(52, 211, 153, 0.4) 0%,
+            rgba(255, 184, 77, 0.5) 0%,
             transparent 70%
         );
         opacity: 0.5;
@@ -107,19 +109,19 @@
         opacity: 1;
         background: radial-gradient(
             circle,
-            rgba(52, 211, 153, 0.8) 0%,
+            rgba(255, 205, 120, 0.9) 0%,
             transparent 70%
         );
     }
 
     .icon-layer {
-        color: #6ee7b7;
+        color: var(--lantern-soft);
         transition: color 0.3s;
-        filter: drop-shadow(0 0 5px rgba(52, 211, 153, 0.5));
+        filter: drop-shadow(0 0 5px rgba(255, 184, 77, 0.5));
     }
     .glass-orb.active .icon-layer {
         color: #fff;
-        filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.8));
+        filter: drop-shadow(0 0 10px rgba(255, 240, 200, 0.9));
     }
     :global(.warn-icon) {
         color: #f87171;
@@ -134,7 +136,7 @@
         width: 140px;
         height: 140px;
         border-radius: 50%;
-        border: 2px solid rgba(52, 211, 153, 0.3);
+        border: 2px solid rgba(255, 184, 77, 0.35);
         opacity: 0;
         pointer-events: none;
         animation: ripple 2s infinite linear;
@@ -152,8 +154,8 @@
         text-align: center;
     }
     .text-status {
-        color: #a7f3d0;
-        text-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
+        color: var(--lantern-soft);
+        text-shadow: 0 0 10px rgba(255, 184, 77, 0.35);
     }
     .text-warn {
         color: #fca5a5;

@@ -1,6 +1,7 @@
 <script lang="ts">
     import { Ban, RefreshCw } from "lucide-svelte";
     import { fade } from "svelte/transition";
+    import GrassPlains from "./components/GrassPlains.svelte";
 
     function retry() {
         // Clear session and reload to trigger new auth flow
@@ -10,6 +11,7 @@
 </script>
 
 <div class="rejected-screen" in:fade>
+    <GrassPlains />
     <div class="card">
         <div class="icon-pulse">
             <Ban size={48} />
@@ -26,28 +28,31 @@
 
 <style>
     .rejected-screen {
+        position: relative;
         display: flex;
         align-items: center;
         justify-content: center;
         height: 100vh;
-        background: #020617;
+        background: var(--color-bg);
         color: #ecfdf5;
-        background-image: radial-gradient(circle at center, #3f1818 0%, #020617 70%);
     }
 
     .card {
-        background: rgba(30, 41, 59, 0.5);
-        backdrop-filter: blur(10px);
+        position: relative;
+        z-index: 10;
+        background: var(--glass);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
         padding: 3rem 2rem;
         border-radius: 24px;
-        border: 1px solid rgba(248, 113, 113, 0.2);
+        border: 1px solid rgba(248, 113, 113, 0.25);
         text-align: center;
         max-width: 400px;
-        box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+        box-shadow: 0 20px 50px rgba(0,0,0,0.35);
     }
 
     .icon-pulse {
-        background: rgba(248, 113, 113, 0.1);
+        background: rgba(248, 113, 113, 0.12);
         width: 100px;
         height: 100px;
         border-radius: 50%;

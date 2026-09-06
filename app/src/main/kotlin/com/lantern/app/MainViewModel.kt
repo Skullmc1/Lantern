@@ -1,12 +1,15 @@
 package com.lantern.app
 
+import android.app.Application
 import android.content.ContentResolver
+import android.content.Context
 import android.net.Uri
+import android.provider.DocumentsContract
 import android.provider.OpenableColumns
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.lantern.app.server.ClientSession
 import com.lantern.app.server.SharedItem
@@ -22,7 +25,7 @@ import java.net.Inet4Address
 import java.net.NetworkInterface
 import java.util.Collections
 
-class MainViewModel : ViewModel() {
+class MainViewModel(application: Application) : AndroidViewModel(application) {
     private var lanternService: LanternService? = null
     
     var isServerRunning by mutableStateOf(false)
@@ -66,11 +69,17 @@ class MainViewModel : ViewModel() {
         val service = lanternService ?: return
         
         if (service.isRunning) {
-            service.stopServer()
+            // Update UI instantly, then stop the server in the background.
+            // fileServer.stop() blocks (up to ~3s) while Ktor shuts down, so it
+            // must not run on the WebView bridge thread or the UI will look stuck.
             isServerRunning = false
+            viewModelScope.launch(Dispatchers.IO) {
+                service.stopServer()
+            }
         } else {
-            service.startServer(port, rootDir)
+            // Optimistic: show the orb lit immediately while the server starts.
             isServerRunning = true
+            service.startServer(port, rootDir)
             refreshIp()
         }
     }
@@ -83,33 +92,86 @@ class MainViewModel : ViewModel() {
         lanternService?.sessionManager?.rejectSession(sessionId)
     }
 
-    fun createShareFromUri(uri: Uri, contentResolver: ContentResolver) {
+    fun createShareFromUri(uri: Uri) {
         val service = lanternService ?: return
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                var name = "Unknown"
-                contentResolver.query(uri, null, null, null, null)?.use { cursor ->
-                    val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
-                    if (cursor.moveToFirst()) {
-                        name = cursor.getString(nameIndex)
-                    }
-                }
-
-                val cacheDir = File(getApplicationCacheDir(), "shared_items")
+                val cacheDir = File(getApplication<Application>().cacheDir, "shared_items")
                 if (!cacheDir.exists()) cacheDir.mkdirs()
-                
-                val targetFile = File(cacheDir, "${System.currentTimeMillis()}_$name")
-                contentResolver.openInputStream(uri)?.use { input ->
-                    targetFile.outputStream().use { output ->
-                        input.copyTo(output)
-                    }
-                }
-                
-                if (targetFile.isFile) {
-                    service.sharedItemManager.createShare(targetFile)
+                val target = copyUriToCache(uri, cacheDir)
+                if (target != null) {
+                    service.sharedItemManager.createShare(target)
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
+            }
+        }
+    }
+
+    private fun copyUriToCache(uri: Uri, cacheDir: File): File? {
+        val resolver = getApplication<Application>().contentResolver
+        return if (DocumentsContract.isTreeUri(uri)) {
+            val name = queryDisplayName(resolver, uri) ?: "folder_${System.currentTimeMillis()}"
+            val dest = File(cacheDir, name)
+            dest.mkdirs()
+            copyTreeChildren(resolver, uri, dest)
+            if (dest.isDirectory) dest else null
+        } else {
+            val name = queryDisplayName(resolver, uri) ?: "file_${System.currentTimeMillis()}"
+            val dest = File(cacheDir, name)
+            copyStream(resolver, uri, dest)
+            if (dest.isFile) dest else null
+        }
+    }
+
+    private fun queryDisplayName(resolver: ContentResolver, uri: Uri): String? {
+        var name: String? = null
+        val columns = arrayOf(
+            OpenableColumns.DISPLAY_NAME,
+            DocumentsContract.Document.COLUMN_DISPLAY_NAME,
+        )
+        resolver.query(uri, columns, null, null, null)?.use { cursor ->
+            if (cursor.moveToFirst()) {
+                val idx = cursor.getColumnIndex(DocumentsContract.Document.COLUMN_DISPLAY_NAME)
+                if (idx >= 0) name = cursor.getString(idx)
+                if (name.isNullOrEmpty()) {
+                    val idx2 = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                    if (idx2 >= 0) name = cursor.getString(idx2)
+                }
+            }
+        }
+        return name?.ifEmpty { null } ?: uri.lastPathSegment
+    }
+
+    private fun copyTreeChildren(resolver: ContentResolver, treeUri: Uri, destDir: File) {
+        val rootDocId = DocumentsContract.getTreeDocumentId(treeUri)
+        val childrenUri = DocumentsContract.buildChildDocumentsUriUsingTree(treeUri, rootDocId)
+        val columns = arrayOf(
+            DocumentsContract.Document.COLUMN_DOCUMENT_ID,
+            DocumentsContract.Document.COLUMN_DISPLAY_NAME,
+            DocumentsContract.Document.COLUMN_MIME_TYPE,
+        )
+        resolver.query(childrenUri, columns, null, null, null)?.use { cursor ->
+            while (cursor.moveToNext()) {
+                val docId = cursor.getString(cursor.getColumnIndexOrThrow(DocumentsContract.Document.COLUMN_DOCUMENT_ID))
+                val name = cursor.getString(cursor.getColumnIndexOrThrow(DocumentsContract.Document.COLUMN_DISPLAY_NAME))
+                val mime = cursor.getString(cursor.getColumnIndexOrThrow(DocumentsContract.Document.COLUMN_MIME_TYPE))
+                val docUri = DocumentsContract.buildDocumentUriUsingTree(treeUri, docId)
+                if (DocumentsContract.Document.MIME_TYPE_DIR == mime) {
+                    val subDir = File(destDir, name)
+                    subDir.mkdirs()
+                    copyTreeChildren(resolver, docUri, subDir)
+                } else {
+                    copyStream(resolver, docUri, File(destDir, name))
+                }
+            }
+        }
+    }
+
+    private fun copyStream(resolver: ContentResolver, uri: Uri, target: File) {
+        resolver.openInputStream(uri)?.use { input ->
+            target.outputStream().use { output ->
+                input.copyTo(output)
             }
         }
     }
@@ -130,10 +192,6 @@ class MainViewModel : ViewModel() {
     
     fun revokeShare(token: String) {
         lanternService?.sharedItemManager?.revokeShare(token)
-    }
-
-    private fun getApplicationCacheDir(): File {
-        return serverRoot ?: File("/sdcard/Lantern/cache")
     }
 
     fun refreshIp() {

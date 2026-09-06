@@ -1,5 +1,6 @@
 <script lang="ts">
     import { onMount, onDestroy } from "svelte";
+    import GrassPlains from "./components/GrassPlains.svelte";
     import StatusHeader from "./components/StatusHeader.svelte";
     import OrbControl from "./components/OrbControl.svelte";
     import RequestStack from "./components/RequestStack.svelte";
@@ -128,28 +129,26 @@
 </script>
 
 <div class="bio-zen-shell" class:active={state.running}>
-    <div class="ambient-layer">
-        <div class="spore s1"></div>
-        <div class="spore s2"></div>
-        <div class="spore s3"></div>
-    </div>
+    <GrassPlains />
 
     <StatusHeader running={state.running} />
 
     <main>
-        <OrbControl 
-            running={state.running}
-            permission={state.permission}
-            onInteract={handleInteraction}
-        />
-        
-        <SharedItemsList 
-            shares={sharedItems}
-            onRevoke={revokeShare}
-            onPickFile={pickFile}
-            onPickFolder={pickFolder}
-            onShowQr={openShareQr}
-        />
+        <div class="center-content">
+            <OrbControl 
+                running={state.running}
+                permission={state.permission}
+                onInteract={handleInteraction}
+            />
+            
+            <SharedItemsList 
+                shares={sharedItems}
+                onRevoke={revokeShare}
+                onPickFile={pickFile}
+                onPickFolder={pickFolder}
+                onShowQr={openShareQr}
+            />
+        </div>
         
         <RequestStack 
             sessions={pendingSessions} 
@@ -181,7 +180,7 @@
             "Inter",
             -apple-system,
             sans-serif;
-        background: #000;
+        background: var(--color-bg);
     }
 
     .bio-zen-shell {
@@ -191,69 +190,34 @@
         overflow: hidden;
         display: flex;
         flex-direction: column;
-        background: radial-gradient(circle at top, #112822 0%, #020617 100%);
+        background: transparent;
         color: #ecfdf5;
         transition: background 1s ease;
+        padding-top: env(safe-area-inset-top, 0px);
+        padding-bottom: env(safe-area-inset-bottom, 0px);
     }
 
     .bio-zen-shell.active {
-        background: radial-gradient(circle at top, #064e3b 0%, #020617 80%);
-    }
-
-    .ambient-layer {
-        position: absolute;
-        inset: 0;
-        pointer-events: none;
-        overflow: hidden;
-    }
-    .spore {
-        position: absolute;
-        border-radius: 50%;
-        filter: blur(40px);
-        opacity: 0.4;
-        animation: float 10s infinite ease-in-out alternate;
-    }
-    .s1 {
-        width: 200px;
-        height: 200px;
-        background: #10b981;
-        top: -50px;
-        left: -50px;
-    }
-    .s2 {
-        width: 300px;
-        height: 300px;
-        background: #059669;
-        bottom: 10%;
-        right: -100px;
-        animation-duration: 15s;
-    }
-    .s3 {
-        width: 150px;
-        height: 150px;
-        background: #34d399;
-        top: 40%;
-        left: 30%;
-        opacity: 0.1;
-        animation-duration: 20s;
+        background: transparent;
     }
 
     main {
         flex: 1;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        z-index: 10;
+        position: relative;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(255, 184, 77, 0.3) transparent;
+    }
+
+    .center-content {
+        margin: auto 0;
         display: flex;
         flex-direction: column;
         align-items: center;
-        justify-content: center;
-        z-index: 10;
-        position: relative;
-    }
-
-    @keyframes float {
-        0% {
-            transform: translate(0, 0);
-        }
-        100% {
-            transform: translate(20px, -20px);
-        }
+        width: 100%;
+        padding: 1rem 0 4rem;
     }
 </style>

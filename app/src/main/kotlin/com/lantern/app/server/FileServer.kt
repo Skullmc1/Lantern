@@ -19,6 +19,7 @@ import io.ktor.server.request.receive
 import io.ktor.server.request.receiveMultipart
 import io.ktor.server.response.respond
 import io.ktor.server.response.respondFile
+import io.ktor.server.response.respondRedirect
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
@@ -156,8 +157,8 @@ class FileServer(
                     }
 
                     if (item.isDirectory) {
-                        // Folder sharing is disabled for magic links for now
-                        call.respond(HttpStatusCode.Forbidden, "Folder sharing is currently disabled")
+                        // Redirect to the SPA in shared-folder mode
+                        call.respondRedirect("/?share=${item.token}")
                     } else {
                         // Direct file download
                         call.response.headers.append(

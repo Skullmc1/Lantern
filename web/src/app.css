@@ -1,10 +1,28 @@
 :root {
-  --color-primary: #00E676;
-  --color-secondary: #69F0AE;
-  --color-bg: #121212;
-  --color-surface: #1E1E1E;
-  --color-text: #EEEEEE;
-  font-family: 'Courier New', Courier, monospace;
+  /* Lantern glow (warm amber) */
+  --lantern: #ffb84d;
+  --lantern-soft: #ffe9b3;
+  --lantern-deep: #d97706;
+
+  /* Meadow greens */
+  --meadow: #34d399;
+  --meadow-bright: #6ee7b7;
+  --meadow-deep: #0a2417;
+  --meadow-dark: #123a26;
+
+  /* Glass surfaces lit by dusk */
+  --glass: rgba(16, 34, 27, 0.55);
+  --glass-strong: rgba(13, 28, 22, 0.78);
+  --glass-border: rgba(255, 214, 120, 0.16);
+  --glass-border-green: rgba(52, 211, 153, 0.2);
+
+  --color-text: #eef3ec;
+  --color-muted: #9fb4a8;
+
+  --color-bg: #0e2a1a;
+  --color-surface: rgba(255, 255, 255, 0.04);
+  --color-primary: var(--meadow);
+  --color-secondary: var(--meadow-bright);
 }
 
 body {
@@ -26,4 +44,28 @@ a {
 
 * {
   box-sizing: border-box;
+}
+
+/* Kill the default blue tap-highlight / focus flash on buttons */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button,
+[role="button"],
+a,
+input,
+select,
+textarea {
+  outline: none;
+}
+
+button:focus-visible,
+[role="button"]:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--lantern);
+  outline-offset: 2px;
 }

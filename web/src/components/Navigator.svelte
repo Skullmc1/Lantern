@@ -42,9 +42,10 @@
 
 <style>
     .navigator {
-        background: rgba(30, 41, 59, 0.5);
-        border: 1px solid rgba(52, 211, 153, 0.1);
-        backdrop-filter: blur(12px);
+        background: var(--glass);
+        border: 1px solid var(--glass-border-green);
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
         border-radius: 12px;
         padding: 0.5rem;
         display: flex;
@@ -56,7 +57,7 @@
     .home-btn {
         background: none;
         border: none;
-        color: #34d399;
+        color: var(--lantern);
         width: 36px;
         height: 36px;
         border-radius: 8px;
@@ -69,8 +70,8 @@
     }
 
     .home-btn:hover {
-        background: rgba(52, 211, 153, 0.1);
-        color: #6ee7b7;
+        background: rgba(255, 184, 77, 0.12);
+        color: var(--lantern-soft);
     }
 
     .divider {
@@ -114,8 +115,8 @@
     }
 
     .node:hover {
-        background: rgba(255, 255, 255, 0.05);
-        color: #34d399;
+        background: rgba(255, 184, 77, 0.1);
+        color: var(--lantern);
     }
 
     .placeholder {

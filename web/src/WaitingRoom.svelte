@@ -3,6 +3,7 @@
     import { checkAuthStatus } from "./lib/authService";
     import { Loader2, Lock } from "lucide-svelte";
     import { fade } from "svelte/transition";
+    import GrassPlains from "./components/GrassPlains.svelte";
 
     export let onApproved: () => void;
 
@@ -27,6 +28,7 @@
 </script>
 
 <div class="waiting-room" in:fade>
+    <GrassPlains />
     <div class="card">
         <div class="icon-pulse">
             <Lock size={48} />
@@ -43,28 +45,31 @@
 
 <style>
     .waiting-room {
+        position: relative;
         display: flex;
         align-items: center;
         justify-content: center;
         height: 100vh;
-        background: #020617;
+        background: var(--color-bg);
         color: #ecfdf5;
-        background-image: radial-gradient(circle at center, #064e3b 0%, #020617 70%);
     }
 
     .card {
-        background: rgba(30, 41, 59, 0.5);
-        backdrop-filter: blur(10px);
+        position: relative;
+        z-index: 10;
+        background: var(--glass);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
         padding: 3rem 2rem;
         border-radius: 24px;
-        border: 1px solid rgba(52, 211, 153, 0.2);
+        border: 1px solid var(--glass-border);
         text-align: center;
         max-width: 400px;
-        box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+        box-shadow: 0 20px 50px rgba(0,0,0,0.35);
     }
 
     .icon-pulse {
-        background: rgba(16, 185, 129, 0.1);
+        background: rgba(255, 184, 77, 0.12);
         width: 100px;
         height: 100px;
         border-radius: 50%;
@@ -72,20 +77,21 @@
         align-items: center;
         justify-content: center;
         margin: 0 auto 1.5rem auto;
-        color: #34d399;
+        color: var(--lantern);
         animation: pulse 2s infinite;
     }
 
     h2 {
         font-size: 2rem;
         margin: 0 0 1rem 0;
-        background: linear-gradient(to right, #6ee7b7, #34d399);
+        background: linear-gradient(to right, #ffe9b3, #34d399);
+        background-clip: text;
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
     }
 
     p {
-        color: #94a3b8;
+        color: #b7cbbf;
         line-height: 1.5;
         margin-bottom: 2rem;
     }
@@ -95,9 +101,9 @@
         align-items: center;
         justify-content: center;
         gap: 0.5rem;
-        color: #6ee7b7;
+        color: var(--lantern-soft);
         font-family: monospace;
-        background: rgba(0,0,0,0.2);
+        background: rgba(0,0,0,0.25);
         padding: 0.75rem;
         border-radius: 99px;
     }
@@ -109,8 +115,8 @@
     @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
     
     @keyframes pulse {
-        0% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.4); }
-        70% { box-shadow: 0 0 0 20px rgba(52, 211, 153, 0); }
-        100% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0); }
+        0% { box-shadow: 0 0 0 0 rgba(255, 184, 77, 0.4); }
+        70% { box-shadow: 0 0 0 20px rgba(255, 184, 77, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(255, 184, 77, 0); }
     }
 </style>

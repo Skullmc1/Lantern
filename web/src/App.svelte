@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import './lib/android'; // Import types
+  import GrassPlains from './components/GrassPlains.svelte';
   import ControlPanel from './ControlPanel.svelte';
   import FileBrowser from './FileBrowser.svelte';
   import WaitingRoom from './WaitingRoom.svelte';
@@ -12,6 +13,13 @@
   let shareToken = "";
 
   onMount(async () => {
+    // Preview-only: when a demo auth state is requested via ?demo=, reset any
+    // stored session so each switch starts a fresh request to the mock server.
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("demo")) {
+      localStorage.removeItem("lantern_auth");
+    }
+
     // Check if running inside Android WebView with our interface
     if (window.Android) {
         isAndroidApp = true;
@@ -26,6 +34,12 @@
             authStatus = "SHARED";
             return;
         }
+    }
+    const shareParam = params.get("share");
+    if (shareParam) {
+        shareToken = shareParam;
+        authStatus = "SHARED";
+        return;
     }
 
     // Auth Flow for Web Clients
@@ -58,6 +72,8 @@
     <RejectedScreen />
   {:else}
     <!-- Loading state -->
-    <div style="background: #020617; height: 100vh;"></div>
+    <div style="position: relative; background: var(--color-bg); height: 100vh; overflow: hidden;">
+      <GrassPlains />
+    </div>
   {/if}
 {/if}

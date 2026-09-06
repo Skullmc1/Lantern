@@ -67,8 +67,10 @@
         display: flex;
         align-items: center;
         gap: 16px;
-        background: rgba(6, 78, 59, 0.4);
-        border: 1px solid rgba(52, 211, 153, 0.2);
+        background: var(--glass);
+        border: 1px solid var(--glass-border);
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
         padding: 12px 24px;
         border-radius: 16px;
         opacity: 0;
@@ -88,10 +90,10 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        background: rgba(6, 78, 59, 0.4);
-        border: 1px solid rgba(52, 211, 153, 0.2);
+        background: var(--glass);
+        border: 1px solid var(--glass-border);
         border-radius: 16px;
-        color: #34d399;
+        color: var(--lantern);
         cursor: pointer;
         opacity: 0;
         transform: translateY(20px);
@@ -99,7 +101,7 @@
     }
     
     .qr-btn:hover {
-        background: rgba(52, 211, 153, 0.1);
+        background: rgba(255, 184, 77, 0.12);
         transform: translateY(0) scale(1.05);
     }
     
@@ -109,7 +111,7 @@
     }
 
     .connection-card:hover {
-        background: rgba(6, 78, 59, 0.6);
+        background: var(--glass-strong);
         transform: translateY(0) scale(1.02);
     }
     .connection-card:active {
@@ -117,24 +119,24 @@
     }
 
     .connection-card.copied {
-        background: #064e3b;
-        border-color: #34d399;
+        background: rgba(255, 184, 77, 0.16);
+        border-color: var(--lantern);
     }
 
     .conn-icon {
         width: 32px;
         height: 32px;
-        background: #065f46;
+        background: rgba(255, 184, 77, 0.16);
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
-        color: #34d399;
+        color: var(--lantern);
         transition: all 0.2s;
     }
     .connection-card.copied .conn-icon {
-        background: #34d399;
-        color: #022c22;
+        background: var(--lantern);
+        color: #3a2406;
     }
 
     .conn-info {
@@ -144,8 +146,8 @@
     }
     .conn-info .label {
         font-size: 0.7rem;
-        color: #6ee7b7;
-        opacity: 0.8;
+        color: var(--lantern-soft);
+        opacity: 0.85;
     }
     .conn-info .value {
         font-family: monospace;

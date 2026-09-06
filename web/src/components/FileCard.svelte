@@ -17,9 +17,9 @@
 
     export let item: FileItem;
     export let viewMode: 'grid' | 'list' = 'grid';
-    export let onDelete: (item: FileItem) => void;
-    export let onRename: (item: FileItem) => void;
-    export let onNavigate: (item: FileItem) => void;
+    export let onDelete: (item: FileItem) => void = () => {};
+    export let onRename: (item: FileItem) => void = () => {};
+    export let onNavigate: (item: FileItem) => void = () => {};
 
     let menuOpen = false;
     let cardRef: HTMLDivElement;
@@ -40,6 +40,17 @@
         if (menuOpen && cardRef && !cardRef.contains(event.target as Node)) {
             menuOpen = false;
         }
+    }
+
+    function handleKeydown(event: KeyboardEvent) {
+        if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            if (item.isDirectory) onNavigate(item);
+        }
+    }
+
+    function handleMenuKeydown(event: KeyboardEvent) {
+        if (event.key === "Escape") menuOpen = false;
     }
 
     function handleDownload() {
@@ -65,9 +76,9 @@
             if (item.isDirectory) onNavigate(item);
             // If file, do nothing on main click as requested to avoid accidental downloads
         }}
+        on:keydown={handleKeydown}
         role="button"
         tabindex="0"
-        on:keydown
     >
         <div class="visual">
             <svelte:component 
@@ -89,20 +100,25 @@
     <button
         class="menu-trigger"
         on:click|stopPropagation={() => (menuOpen = !menuOpen)}
+        on:keydown={handleMenuKeydown}
+        aria-label="More options"
+        aria-expanded={menuOpen}
     >
         <MoreVertical size={16} />
     </button>
 
     {#if menuOpen}
-        <div class="actions-popover" transition:slide={{ duration: 150 }}>
+        <div class="actions-popover" role="menu" transition:slide={{ duration: 150 }}>
             {#if !item.isDirectory}
                 <button
+                    role="menuitem"
                     on:click|stopPropagation={handleDownload}
                 >
                     <Download size={14} /> Download
                 </button>
             {/if}
             <button
+                role="menuitem"
                 on:click|stopPropagation={() => {
                     onRename(item);
                     menuOpen = false;
@@ -112,6 +128,7 @@
             </button>
             <button
                 class="danger"
+                role="menuitem"
                 on:click|stopPropagation={() => {
                     onDelete(item);
                     menuOpen = false;
@@ -125,26 +142,27 @@
 
 <style>
     .card {
-        background: rgba(30, 41, 59, 0.4);
-        border: 1px solid rgba(52, 211, 153, 0.1);
+        background: var(--glass);
+        border: 1px solid var(--glass-border-green);
         border-radius: 12px;
         position: relative;
         transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         overflow: hidden; /* Contains the slide menu */
-        backdrop-filter: blur(5px);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
     }
 
     /* --- Hover Effects --- */
     .card:hover {
-        background: rgba(30, 41, 59, 0.6);
-        border-color: rgba(52, 211, 153, 0.3);
+        background: var(--glass-strong);
+        border-color: rgba(255, 184, 77, 0.35);
         transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
     }
     
     .card.active {
-        border-color: #34d399;
-        background: rgba(6, 78, 59, 0.3);
+        border-color: var(--lantern);
+        background: rgba(255, 184, 77, 0.08);
         z-index: 10; 
     }
 
@@ -180,7 +198,7 @@
     /* --- Visual Icon --- */
     .visual {
         padding: 0.5rem;
-        background: rgba(2, 6, 23, 0.3);
+        background: rgba(10, 36, 23, 0.4);
         border-radius: 10px;
         display: flex;
         flex-shrink: 0;
@@ -188,7 +206,7 @@
 
     .card.grid .visual {
         padding: 0.75rem;
-        background: rgba(16, 185, 129, 0.05);
+        background: rgba(255, 184, 77, 0.06);
         margin-bottom: 0.5rem;
     }
 
@@ -239,15 +257,15 @@
     }
 
     .menu-trigger:hover {
-        background: rgba(255, 255, 255, 0.05);
-        color: #e2e8f0;
+        background: rgba(255, 184, 77, 0.1);
+        color: #eef3ec;
     }
 
     /* --- Actions Popover --- */
     .actions-popover {
         position: absolute;
         inset: 0;
-        background: rgba(15, 23, 42, 0.95);
+        background: rgba(10, 24, 18, 0.92);
         backdrop-filter: blur(10px);
         display: flex;
         flex-direction: column; /* Or row depending on preference */
@@ -287,13 +305,13 @@
     
     .card.list .actions-popover button {
         width: auto;
-        background: #1e293b;
-        border: 1px solid #334155;
+        background: var(--glass-strong);
+        border: 1px solid var(--glass-border);
     }
 
     .actions-popover button:hover {
-        background: rgba(52, 211, 153, 0.1);
-        color: #34d399;
+        background: rgba(255, 184, 77, 0.12);
+        color: var(--lantern);
     }
 
     .actions-popover button.danger {

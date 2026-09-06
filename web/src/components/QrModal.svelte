@@ -18,8 +18,8 @@
                     width: 256,
                     margin: 2,
                     color: {
-                        dark: "#064e3b",
-                        light: "#ecfdf5",
+                        dark: "#8a6d1a",
+                        light: "#fff7e6",
                     },
                 });
             } catch (err) {
@@ -39,8 +39,23 @@
     }
 </script>
 
-<div class="modal-backdrop" on:click={onClose} transition:fade>
-    <div class="modal-content" on:click|stopPropagation transition:scale>
+<div
+    class="modal-backdrop"
+    on:click={onClose}
+    on:keydown={(e) => { if (e.key === 'Escape') onClose(); }}
+    role="button"
+    tabindex="-1"
+    transition:fade
+>
+    <div
+        class="modal-content"
+        role="dialog"
+        aria-modal="true"
+        tabindex="-1"
+        on:click|stopPropagation
+        on:keydown|stopPropagation
+        transition:scale
+    >
         <div class="modal-header">
             <h3>{title}</h3>
             <button class="close-btn" on:click={onClose}>
@@ -78,13 +93,15 @@
     }
 
     .modal-content {
-        background: #020617;
-        border: 1px solid #34d399;
+        background: var(--glass-strong);
+        border: 1px solid var(--glass-border);
         border-radius: 20px;
         padding: 1.5rem;
         width: 90%;
         max-width: 320px;
-        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.55);
+        backdrop-filter: blur(18px);
+        -webkit-backdrop-filter: blur(18px);
     }
 
     .modal-header {
@@ -117,7 +134,7 @@
     }
 
     .qr-wrapper {
-        background: #ecfdf5;
+        background: #fff7e6;
         padding: 1rem;
         border-radius: 12px;
         display: flex;
@@ -154,13 +171,13 @@
     .copy-btn {
         background: none;
         border: none;
-        color: #34d399;
+        color: var(--lantern);
         cursor: pointer;
         padding: 4px;
         border-radius: 4px;
     }
 
     .copy-btn:hover {
-        background: rgba(52, 211, 153, 0.1);
+        background: rgba(255, 184, 77, 0.12);
     }
 </style>
